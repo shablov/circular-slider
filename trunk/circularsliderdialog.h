@@ -55,7 +55,6 @@ private:
 	void calculateDrawRect();
 	void drawScale();
 	void drawSectors();
-	void drawAngle();
 
 	void handleEvent(QEvent *event);
 	bool leftButtonWasPressed();
@@ -64,7 +63,6 @@ private:
 	qreal calculateAngle(const QPointF &point);
 	void drawArrow(const qreal &angle);
 	bool anglePermitted(const qreal &angle);
-	void drawAngleValue();
 	bool angleInSector(const Sector &sector, const qreal &angle);
 	qreal nearestPermittedAngle(const qreal &angle);
 	qreal calculateNearestAngle(const Sector &sector, const qreal &angle);
@@ -80,8 +78,6 @@ private:
 	QPen arrowPen;
 	QGraphicsLineItem *arrowItem;
 	QGraphicsTextItem *arrowTextItem;
-
-	QGraphicsTextItem *valueTextItem;
 
 	QDoubleSpinBox *angleSpinBox;
 
