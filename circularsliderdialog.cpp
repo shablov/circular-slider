@@ -18,12 +18,34 @@ CircularSliderDialog::CircularSliderDialog(QWidget *parent)
 	  standardOffset(90), scaleCount(8), degreeChar(0x00B0)
 {
 	setMinimumSize(300, 300);
+	setWindowTitle(tr("Bearing choise"));
+
 	setDefaultSettings();
 
 	QVBoxLayout *mainLayout = new QVBoxLayout(this);
 	createGraphics();
 	mainLayout->addWidget(view);
 	createControlWidgets();
+}
+
+
+void CircularSliderDialog::setDefaultSettings()
+{
+	arrowPen = QPen(Qt::green, 2);
+	arrowItem = 0;
+	arrowTextItem = 0;
+
+	sectorsBrush = QBrush(Qt::red);
+	sectorsPen = QPen();
+
+	backgroundBrush = QBrush(Qt::white);
+
+	circleBrush = QBrush(Qt::white);
+	scalePen = QPen(Qt::black, 2);
+
+	mCCW = 1;
+	mOffset = 0;
+	mAngle = 0;
 }
 
 void CircularSliderDialog::createGraphics()
@@ -74,32 +96,12 @@ void CircularSliderDialog::createControlWidgets()
 	widgetsLayout->addWidget(cancelButton);
 }
 
-void CircularSliderDialog::setDefaultSettings()
+void CircularSliderDialog::resizeEvent(QResizeEvent *event)
 {
-	arrowPen = QPen(Qt::green, 2);
-	arrowItem = 0;
-	arrowTextItem = 0;
-
-	valueTextItem = 0;
-
-	sectorsBrush = QBrush(Qt::red);
-	sectorsPen = QPen();
-
-	backgroundBrush = QBrush(Qt::white);
-
-	circleBrush = QBrush(Qt::white);
-	scalePen = QPen(Qt::black, 2);
-
-	mCCW = 1;
-	mOffset = 0;
-	mAngle = 0;
-}
-
-void CircularSliderDialog::setOffset(qreal offset)
-{
-	mOffset = offset;
+	QWidget::resizeEvent(event);
 	redraw();
 }
+
 
 void CircularSliderDialog::redraw()
 {
@@ -107,7 +109,7 @@ void CircularSliderDialog::redraw()
 	calculateDrawRect();
 	drawScale();
 	drawSectors();
-
+	drawArrow(mAngle);
 }
 
 void CircularSliderDialog::clearScene()
@@ -116,6 +118,7 @@ void CircularSliderDialog::clearScene()
 	scene->setSceneRect(view->rect());
 	scene->setBackgroundBrush(backgroundBrush);
 	arrowItem = 0;
+	arrowTextItem = 0;
 }
 
 void CircularSliderDialog::calculateDrawRect()
@@ -173,6 +176,34 @@ void CircularSliderDialog::drawSectors()
 	}
 }
 
+void CircularSliderDialog::drawArrow(const qreal &angle)
+{
+	if (!arrowItem)
+	{
+		arrowItem = scene->addLine(QLineF(), arrowPen);
+	}
+	if (!arrowTextItem)
+	{
+		arrowTextItem = scene->addText("");
+	}
+
+	QLineF arrow(drawRect.center(), QPointF(mCCW, 0));
+	arrow.setAngle(mCCW * angle + mOffset + standardOffset);
+	arrow.setLength(drawRect.width() / 2);
+	arrowItem->setLine(arrow);
+
+	arrowTextItem->setPlainText(QString::number(angle) + degreeChar);
+	QRectF boundRect = arrowTextItem->boundingRect();
+	boundRect.moveCenter(arrow.p2());
+	arrowTextItem->setPos(boundRect.topLeft());
+}
+
+void CircularSliderDialog::setOffset(qreal offset)
+{
+	mOffset = offset;
+	redraw();
+}
+
 void CircularSliderDialog::setDirection(bool directionCW)
 {
 	mCCW = directionCW ? -1 : 1;
@@ -202,19 +233,6 @@ void CircularSliderDialog::addSector(const QPair<qreal, qreal> &sector)
 	}
 	sectors.append(sector);
 	redraw();
-}
-
-void CircularSliderDialog::setAngle(const qreal &angle)
-{
-	mAngle = angle;
-	drawAngle();
-	emit angleChanged(mAngle);
-}
-
-void CircularSliderDialog::drawAngle()
-{
-	drawArrow(mAngle);
-	drawAngleValue();
 }
 
 qreal CircularSliderDialog::angle()
@@ -255,12 +273,6 @@ void CircularSliderDialog::setScalePen(const QPen &pen)
 void CircularSliderDialog::setArrowPen(const QPen &pen)
 {
 	arrowPen = pen;
-	redraw();
-}
-
-void CircularSliderDialog::resizeEvent(QResizeEvent *event)
-{
-	QWidget::resizeEvent(event);
 	redraw();
 }
 
@@ -325,46 +337,11 @@ bool CircularSliderDialog::leftButtonWasPressed()
 	return buttonPressed == Qt::LeftButton;
 }
 
-void CircularSliderDialog::drawArrow(const qreal &angle)
+void CircularSliderDialog::setAngle(const qreal &angle)
 {
-	if (!arrowItem)
-	{
-		arrowItem = scene->addLine(QLineF(), arrowPen);
-	}
-	if (!arrowTextItem)
-	{
-		arrowTextItem = scene->addText("");
-	}
-
-	QLineF arrow(drawRect.center(), QPointF(mCCW, 0));
-	arrow.setAngle(mCCW * angle + mOffset + standardOffset);
-	arrow.setLength(drawRect.width() / 2);
-	arrowItem->setLine(arrow);
-
-	arrowTextItem->setPlainText(QString::number(angle) + degreeChar);
-	QRectF boundRect = arrowTextItem->boundingRect();
-	boundRect.moveCenter(arrow.p2());
-	arrowTextItem->setPos(boundRect.topLeft());
-}
-
-bool CircularSliderDialog::anglePermitted(const qreal &angle)
-{
-	QListIterator<Sector> i(sectors);
-	while(i.hasNext())
-	{
-		Sector sector = i.next();
-		if (angleInSector(sector, angle))
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
-bool CircularSliderDialog::angleInSector(const Sector &sector, const qreal &angle)
-{
-	return  !(((sector.first < sector.second) && (sector.second <= angle || angle <= sector.first)) ||
-			  ((sector.first > sector.second) && (sector.second <= angle && angle <= sector.first)));
+	mAngle = ((angle < 0) || (angle > 360)) ? 0 : angle;
+	drawArrow(mAngle);
+	emit angleChanged(mAngle);
 }
 
 qreal CircularSliderDialog::nearestPermittedAngle(const qreal &angle)
@@ -382,19 +359,29 @@ qreal CircularSliderDialog::nearestPermittedAngle(const qreal &angle)
 	return angle;
 }
 
+bool CircularSliderDialog::angleInSector(const Sector &sector, const qreal &angle)
+{
+	return  !(((sector.first < sector.second) && (sector.second <= angle || angle <= sector.first)) ||
+			  ((sector.first > sector.second) && (sector.second <= angle && angle <= sector.first)));
+}
+
 qreal CircularSliderDialog::calculateNearestAngle(const Sector &sector, const qreal &angle)
 {
 	return (qAbs(sector.first - angle) < qAbs(sector.second - angle)) ? sector.first : sector.second;
 }
 
-void CircularSliderDialog::drawAngleValue()
+bool CircularSliderDialog::anglePermitted(const qreal &angle)
 {
-	if (!valueTextItem)
+	QListIterator<Sector> i(sectors);
+	while(i.hasNext())
 	{
-		valueTextItem = scene->addText("");
-		valueTextItem->setPos(drawRect.bottomRight());
+		Sector sector = i.next();
+		if (angleInSector(sector, angle))
+		{
+			return false;
+		}
 	}
-	valueTextItem->setPlainText(QString::number(mAngle) + degreeChar);
+	return true;
 }
 
 void CircularSliderDialog::onValueChanged(double angle)
