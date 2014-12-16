@@ -23,9 +23,6 @@ CircularSliderDialog::CircularSliderDialog(QWidget *parent)
 	QVBoxLayout *mainLayout = new QVBoxLayout(this);
 	createGraphics();
 	mainLayout->addWidget(view);
-	/// TODO: debug information
-	addSector(qMakePair(45.0, 135.0));
-	addSector(qMakePair(225.0, 315.0));
 	createControlWidgets();
 }
 
@@ -53,9 +50,15 @@ void CircularSliderDialog::createGraphicsView()
 
 void CircularSliderDialog::createControlWidgets()
 {
+	QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(layout());
+	if (!mainLayout)
+	{
+		return;
+	}
 	angleSpinBox = new QDoubleSpinBox;
 	angleSpinBox->setRange(0, 359.9999);
 	angleSpinBox->setDecimals(3);
+	angleSpinBox->setSuffix(degreeChar);
 	connect(this, SIGNAL(angleChanged(double)), angleSpinBox, SLOT(setValue(double)));
 	connect(angleSpinBox, SIGNAL(valueChanged(double)), this, SLOT(onValueChanged(double)));
 	QPushButton *acceptButton = new QPushButton(tr("Accept"));
@@ -64,7 +67,6 @@ void CircularSliderDialog::createControlWidgets()
 	connect(cancelButton, SIGNAL(clicked()), this, SLOT(reject()));
 
 	QHBoxLayout *widgetsLayout = new QHBoxLayout;
-	QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(layout());
 	mainLayout->addLayout(widgetsLayout);
 
 	widgetsLayout->addWidget(angleSpinBox, 1);
