@@ -24,8 +24,10 @@ public:
 
 	void clearSectors();
 	void addSector(const QPair<qreal, qreal> &sector);
-	void setAngle(const qreal &angle);
-	qreal angle();
+	void addSector(const QPair<qint32, qint32> &sector);
+
+	void setValue(const qreal &value);
+	qreal value();
 
 	void setSectorsBrush(const QBrush &brush);
 	void setSectorsPen(const QPen &pen);
@@ -34,12 +36,18 @@ public:
 	void setScalePen(const QPen &pen);
 	void setArrowPen(const QPen &pen);
 
+	void setMinimum(const qreal &min);
+	void setMaximum(const qreal &max);
+	void setRange(const qreal &min, const qreal &max);
+	void setPrefix(const QString &prefix);
+	void setSuffix(const QString &suffix);
+
 protected:
 	void resizeEvent(QResizeEvent *event);
 	bool eventFilter(QObject *obj, QEvent *event);
 
 signals:
-	void angleChanged(double);
+	void valueChanged(double);
 
 private:
 	void createGraphics();
@@ -60,12 +68,12 @@ private:
 	bool leftButtonWasPressed();
 	Qt::MouseButton buttonPressed;
 
-	qreal calculateAngle(const QPointF &point);
-	void drawArrow(const qreal &angle);
-	bool anglePermitted(const qreal &angle);
-	bool angleInSector(const Sector &sector, const qreal &angle);
-	qreal nearestPermittedAngle(const qreal &angle);
-	qreal calculateNearestAngle(const Sector &sector, const qreal &angle);
+	qreal calculateValue(const QPointF &point);
+	void drawArrow(const qreal &value);
+	bool valuePermitted(const qreal &value);
+	bool valueInSector(const Sector &sector, const qreal &value);
+	qreal nearestPermittedValue(const qreal &value);
+	qreal calculateNearestValue(const Sector &sector, const qreal &value);
 
 	QGraphicsView *view;
 	QBrush backgroundBrush;
@@ -79,12 +87,22 @@ private:
 	QGraphicsLineItem *arrowItem;
 	QGraphicsTextItem *arrowTextItem;
 
-	QDoubleSpinBox *angleSpinBox;
+	QDoubleSpinBox *valueSpinBox;
+
+	qreal range();
+	qreal minimum;
+	qreal maximum;
+
+	QString mSuffix;
+	QString mPrefix;
 
 	/**
 	 * @brief mCCW - направление шкалы: -1 по часовой, иначе 1
 	 */
 	int mCCW;
+
+	qreal generatOffset();
+
 	/**
 	 * @brief mOffset - смещение шкалы
 	 */
@@ -93,8 +111,11 @@ private:
 	QBrush sectorsBrush;
 	QPen sectorsPen;
 	QList<Sector> sectors;
+	bool sectorIsValid(const Sector &sector);
 
-	qreal mAngle;
+	qreal angleFromValue(const qreal &value);
+	qreal valueFromAngle(const qreal &angle);
+	qreal mValue;
 
 	/**
 	 * @brief padding - учитывает отступы и длину, высоту текста надписи
@@ -112,13 +133,8 @@ private:
 	 * @brief scaleStep - шаг координатной шкалы
 	 */
 	const qreal scaleCount;
-	/**
-	 * @brief degreeChar - знак градуса
-	 */
-	const QChar degreeChar;
-
 private slots:
-	void onValueChanged(double angle);
+	void onValueChanged(double value);
 };
 
 #endif // CIRCULARSLIDERDIALOG_H
