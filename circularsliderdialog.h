@@ -101,7 +101,7 @@ private:
 	 */
 	int mCCW;
 
-	qreal generatOffset();
+	qreal generalOffset();
 
 	/**
 	 * @brief mOffset - смещение шкалы

@@ -144,8 +144,8 @@ void CircularSliderDialog::drawScale()
 	QLineF textLine(scaleLine);
 	textLine.setLength(textLine.length() + 20);
 
-	scaleLine.setAngle(generatOffset());
-	textLine.setAngle(generatOffset());
+	scaleLine.setAngle(generalOffset());
+	textLine.setAngle(generalOffset());
 	qreal scaleStep = 360 / scaleCount * mCCW;
 	qreal scaleTextStep = range() / scaleCount;
 	for (int i = 0; i < scaleCount; i++)
@@ -165,7 +165,7 @@ void CircularSliderDialog::drawScale()
 	scene->addEllipse(drawRect, QPen(), circleBrush);
 }
 
-qreal CircularSliderDialog::generatOffset()
+qreal CircularSliderDialog::generalOffset()
 {
 	return mOffset + standardOffset;
 }
@@ -190,7 +190,7 @@ void CircularSliderDialog::drawSectors()
 
 		qreal firstAngle = angleFromValue(sector.first);
 		qreal secondAngle = angleFromValue(sector.second);
-		int startAngle = (firstAngle * mCCW + generatOffset()) * 16;
+		int startAngle = (firstAngle * mCCW + generalOffset()) * 16;
 		int spanAngle = fmod(secondAngle - firstAngle + 360, 360) * 16 * mCCW;
 		ellipse->setStartAngle(startAngle);
 		ellipse->setSpanAngle(spanAngle);
@@ -222,7 +222,7 @@ void CircularSliderDialog::drawArrow(const qreal &value)
 
 	QLineF arrow(drawRect.center(), QPointF(mCCW, 0));
 	qreal angle  = angleFromValue(value);
-	arrow.setAngle(mCCW * angle + generatOffset());
+	arrow.setAngle(mCCW * angle + generalOffset());
 	arrow.setLength(drawRect.width() / 2);
 	arrowItem->setLine(arrow);
 
@@ -413,7 +413,7 @@ void CircularSliderDialog::handleEvent(QEvent *event)
 qreal CircularSliderDialog::calculateValue(const QPointF &point)
 {
 	QLineF line(drawRect.center(), point);
-	qreal angle = fmod(((line.angle() - generatOffset()) * mCCW + 720), 360);
+	qreal angle = fmod(((line.angle() - generalOffset()) * mCCW + 720), 360);
 	return valueFromAngle(angle);
 }
 
